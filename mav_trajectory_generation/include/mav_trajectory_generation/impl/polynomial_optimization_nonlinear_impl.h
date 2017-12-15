@@ -195,6 +195,14 @@ int PolynomialOptimizationNonLinear<_N>::optimizeTimeAndFreeConstraints() {
     const double abs_x = std::abs(x);
     initial_step.push_back(optimization_parameters_.initial_stepsize_rel *
                            abs_x);
+    // The following condition is a workaround for issue #31
+    //   If the input points are co-planar, some dimensions of the initial_step
+    //   might be 0 (which is expected). However, this case is incorrectly checked
+    //   in nlopt and an error is thrown in set_initial_step().
+    //   We "prevent" the problem by replacing such entries with the smallest double.
+    if (initial_step.back() == 0) {
+      initial_step[initial_step.size() - 1] = std::numeric_limits<double>::min();
+    }
     lower_bounds.push_back(-abs_x * 2);
     upper_bounds.push_back(abs_x * 2);
   }
